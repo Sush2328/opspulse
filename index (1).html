@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpsFlow — MultiBank Group Operations Command Centre</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+:root{--navy:#1E2761;--mid:#2E3F8F;--light:#CADCFC;--gold:#F5C518;--bg:#F0F2FA;--white:#fff;--border:#E2E8F0;--slate:#475569;--muted:#64748B;--dark:#1E293B;--green:#16A34A;--red:#DC2626;--amber:#F59E0B;--blue:#2563EB;--purple:#7C3AED;--teal:#0D9488;--green-bg:#DCFCE7;--red-bg:#FEE2E2;--amber-bg:#FEF3C7;--blue-bg:#DBEAFE;--purple-bg:#EDE9FE;--teal-bg:#CCFBF1}
+body{background:var(--bg);min-height:100vh;font-size:13px}
+.topbar{background:var(--navy);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{color:var(--gold);font-size:20px;font-weight:700;letter-spacing:1px}
+.logo span{color:var(--light);font-size:11px;font-weight:400;display:block}
+.topbar-right{display:flex;gap:12px;align-items:center}
+.badge-live{background:#16A34A;color:#fff;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600}
+.clock{color:var(--light);font-size:12px}
+.gf{display:flex;gap:8px;align-items:center}
+.gf select{padding:4px 8px;border:1px solid rgba(255,255,255,0.2);border-radius:6px;background:rgba(255,255,255,0.1);color:#fff;font-size:11px}
+.gf select option{background:var(--navy)}
+.nav{background:var(--mid);display:flex;overflow-x:auto;border-bottom:1px solid rgba(255,255,255,0.1)}
+.nav-tab{padding:11px 16px;color:var(--light);font-size:12px;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:all .15s;user-select:none;display:flex;align-items:center;gap:5px}
+.nav-tab.active{color:#fff;border-bottom:3px solid var(--gold);background:rgba(255,255,255,0.08)}
+.nav-tab:hover:not(.active){background:rgba(255,255,255,0.05);color:#fff}
+.nb{background:var(--red);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700}
+.nb-amber{background:var(--amber)}
+.content{padding:16px;max-width:1400px;margin:0 auto}
+.panel{display:none}.panel.active{display:block}
+.filter-bar{background:#fff;border:1px solid var(--border);border-radius:10px;padding:10px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.filter-bar select,.filter-bar input{padding:5px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--dark);background:#fff}
+.filter-bar input{min-width:180px}
+.fl{font-size:11px;color:var(--muted);font-weight:600;white-space:nowrap}
+.btn{padding:5px 14px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:500;border:1px solid var(--border);background:#fff;color:var(--dark);transition:all .15s}
+.btn:hover{background:var(--bg)}
+.btn-p{background:var(--navy);color:#fff;border-color:var(--navy)}
+.btn-p:hover{background:var(--mid)}
+.btn-sm{padding:3px 10px;font-size:11px}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 14px;border-left:4px solid var(--navy)}
+.kpi.g{border-left-color:var(--green)}.kpi.r{border-left-color:var(--red)}.kpi.a{border-left-color:var(--amber)}.kpi.b{border-left-color:var(--blue)}.kpi.p{border-left-color:var(--purple)}.kpi.t{border-left-color:var(--teal)}
+.kl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;font-weight:600}
+.kv{font-size:24px;font-weight:700;color:var(--dark)}
+.ks{font-size:10px;margin-top:3px}
+.ku{color:var(--green)}.kd{color:var(--red)}.kn{color:var(--muted)}
+.cg{display:grid;gap:12px;margin-bottom:14px}
+.cg2{grid-template-columns:1fr 1fr}.cg3{grid-template-columns:1fr 1fr 1fr}
+.cc{background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px}
+.ct{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+.st{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.tc{background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px}
+.th{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.tt{font-size:12px;font-weight:700;color:var(--dark)}
+.dt{width:100%;border-collapse:collapse;font-size:12px}
+.dt th{padding:8px 12px;background:#F8FAFF;color:var(--muted);font-size:10px;font-weight:700;text-align:left;border-bottom:1px solid var(--border);text-transform:uppercase;white-space:nowrap}
+.dt td{padding:9px 12px;border-bottom:1px solid #F8FAFF;color:var(--dark);vertical-align:middle}
+.dt tr:last-child td{border-bottom:none}
+.dt tbody tr:hover td{background:#F8FAFF}
+.pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap}
+.pg{background:var(--green-bg);color:#065F46}.pr{background:var(--red-bg);color:#991B1B}.pa{background:var(--amber-bg);color:#92400E}.pb{background:var(--blue-bg);color:#1E40AF}.pp{background:var(--purple-bg);color:#5B21B6}.pt{background:var(--teal-bg);color:#134E4A}.pn{background:#F1F5F9;color:var(--muted)}
+.wfc{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+.wfi{flex:1}
+.wfn{font-size:13px;font-weight:700;color:var(--dark)}
+.wfm{font-size:11px;color:var(--muted);margin-top:2px}
+.wfs{display:flex;gap:14px;text-align:center}
+.wsv{font-size:16px;font-weight:700;color:var(--navy)}
+.wsl{font-size:10px;color:var(--muted)}
+.builder{background:#F8FAFF;border:1px solid var(--border);border-radius:10px;padding:18px;margin-bottom:14px}
+.br{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.bl{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;min-width:78px;letter-spacing:.3px}
+.bs{padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--dark);background:#fff}
+.ba{color:var(--muted);font-size:16px}
+.wfr{padding:10px 14px;border-radius:6px;font-size:12px;display:none;margin-top:10px}
+.ae{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #F1F5F9;align-items:flex-start}
+.at{font-size:10px;color:var(--muted);min-width:44px;margin-top:2px;font-weight:600}
+.ai{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;flex-shrink:0}
+.ab{flex:1;font-size:12px;line-height:1.5}
+.au{font-weight:700;color:var(--dark)}
+.aa{color:var(--slate)}
+.as2{font-size:10px;color:var(--muted);margin-top:1px}
+.cc2{background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;display:flex;align-items:center;gap:14px}
+.cd{width:48px;height:48px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0}
+.co{background:var(--red-bg);color:var(--red)}.cu{background:var(--amber-bg);color:var(--amber)}.ck{background:var(--green-bg);color:var(--green)}
+.ci{flex:1}
+.cn{font-size:13px;font-weight:700;color:var(--dark)}
+.cm{font-size:11px;color:var(--muted);margin-top:2px}
+@media(max-width:768px){.cg2,.cg3{grid-template-columns:1fr}.kpi-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div><div class="logo">⚡ OpsFlow <span>MultiBank Group — Operations Command Centre</span></div></div>
+  <div class="topbar-right">
+    <div class="gf">
+      <span style="color:var(--light);font-size:11px;font-weight:600">FILTERS:</span>
+      <select id="gf-date"><option>Today</option><option>Last 7 Days</option><option>Last 30 Days</option><option>This Quarter</option></select>
+      <select id="gf-platform"><option value="all">All Platforms</option><option>MT4</option><option>MT5</option><option>MultiBank-Plus</option><option>Crypto (MB.io)</option></select>
+      <select id="gf-region"><option value="all">All Regions</option><option>MENA</option><option>Asia Pacific</option><option>Europe</option><option>Americas</option></select>
+    </div>
+    <span class="badge-live">● LIVE</span>
+    <span class="clock" id="clock"></span>
+  </div>
+</div>
+
+<div class="nav">
+  <div class="nav-tab active" onclick="switchTab('command',this)">📊 Command Centre</div>
+  <div class="nav-tab" onclick="switchTab('payments',this)">💳 Payments <span class="nb">12</span></div>
+  <div class="nav-tab" onclick="switchTab('kyc',this)">🪪 KYC &amp; Onboarding <span class="nb">47</span></div>
+  <div class="nav-tab" onclick="switchTab('trading',this)">📈 Trading &amp; Risk <span class="nb nb-amber">3</span></div>
+  <div class="nav-tab" onclick="switchTab('crm',this)">👥 CRM &amp; Clients</div>
+  <div class="nav-tab" onclick="switchTab('workflow',this)">⚙️ Workflow Builder</div>
+  <div class="nav-tab" onclick="switchTab('audit',this)">🔒 Audit Trail</div>
+  <div class="nav-tab" onclick="switchTab('compliance',this)">📋 Compliance</div>
+</div>
+
+<div class="content">
+
+<!-- COMMAND CENTRE -->
+<div class="panel active" id="panel-command">
+  <div class="kpi-grid">
+    <div class="kpi r"><div class="kl">SLA Breaches Today</div><div class="kv">7</div><div class="ks kd">▲ 3 vs yesterday</div></div>
+    <div class="kpi a"><div class="kl">Open Cases</div><div class="kv">74</div><div class="ks kd">▲ 11 since 9am</div></div>
+    <div class="kpi g"><div class="kl">STP Rate</div><div class="kv">84%</div><div class="ks ku">▲ +12% vs last week</div></div>
+    <div class="kpi b"><div class="kl">Avg Resolution Time</div><div class="kv">3.2h</div><div class="ks ku">▼ -0.8h vs last week</div></div>
+    <div class="kpi p"><div class="kl">Active Incidents</div><div class="kv">3</div><div class="ks kd">1 Critical unresolved</div></div>
+    <div class="kpi t"><div class="kl">Ops Capacity</div><div class="kv">78%</div><div class="ks kn">8 of 12 agents active</div></div>
+    <div class="kpi g"><div class="kl">Auto-Approved Today</div><div class="kv">142</div><div class="ks ku">68% of all cases</div></div>
+    <div class="kpi"><div class="kl">False Positive Rate</div><div class="kv">12%</div><div class="ks ku">▼ from 57% (pre-OpsFlow)</div></div>
+  </div>
+  <div class="cg cg2">
+    <div class="cc"><div class="ct">STP Rate by Platform — Last 7 Days</div><canvas id="c-stp" height="140"></canvas></div>
+    <div class="cc"><div class="ct">Case Volume by Type</div><canvas id="c-type" height="140"></canvas></div>
+  </div>
+  <div class="cg cg2">
+    <div class="cc"><div class="ct">Hourly Case Volume — Today</div><canvas id="c-hour" height="120"></canvas></div>
+    <div class="cc"><div class="ct">Top 5 Countries by Open Cases</div><canvas id="c-country" height="120"></canvas></div>
+  </div>
+  <div class="cg cg3">
+    <div class="cc"><div class="ct">Resolution Time Distribution</div><canvas id="c-res" height="130"></canvas></div>
+    <div class="cc"><div class="ct">Escalation Rate — 10 Weeks</div><canvas id="c-esc" height="130"></canvas></div>
+    <div class="cc"><div class="ct">Agent Workload</div><canvas id="c-agent" height="130"></canvas></div>
+  </div>
+</div>
+
+<!-- PAYMENTS -->
+<div class="panel" id="panel-payments">
+  <div class="kpi-grid">
+    <div class="kpi b"><div class="kl">Total Volume Today</div><div class="kv">$4.2M</div><div class="ks ku">▲ +8% vs yesterday</div></div>
+    <div class="kpi a"><div class="kl">Pending Settlements</div><div class="kv">12</div><div class="ks kd">$847K total value</div></div>
+    <div class="kpi r"><div class="kl">Failed Payments</div><div class="kv">8</div><div class="ks kd">$124K total value</div></div>
+    <div class="kpi a"><div class="kl">Recon Mismatches</div><div class="kv">3</div><div class="ks kd">$12.4K delta</div></div>
+    <div class="kpi g"><div class="kl">Retry Success Rate</div><div class="kv">73%</div><div class="ks ku">▲ +5% vs last week</div></div>
+    <div class="kpi g"><div class="kl">Avg Settlement Time</div><div class="kv">1.4h</div><div class="ks ku">▼ -0.3h vs target</div></div>
+  </div>
+  <div class="filter-bar">
+    <span class="fl">Filter:</span>
+    <select id="pf-status"><option value="all">All Statuses</option><option>Pending</option><option>Completed</option><option>Failed</option><option>Reversed</option></select>
+    <select><option value="all">All Currencies</option><option>USD</option><option>EUR</option><option>GBP</option><option>AED</option></select>
+    <select><option value="all">All Platforms</option><option>MT4</option><option>MT5</option><option>MultiBank-Plus</option><option>Crypto</option></select>
+    <input type="text" placeholder="Search client or payment ID..." id="ps">
+    <button class="btn btn-p btn-sm" onclick="alert('Exporting payments CSV...')">Export CSV</button>
+  </div>
+  <div class="cg cg2">
+    <div class="cc"><div class="ct">Payment Status Breakdown</div><canvas id="c-pstatus" height="140"></canvas></div>
+    <div class="cc"><div class="ct">Failed Payment Reasons</div><canvas id="c-pfail" height="140"></canvas></div>
+  </div>
+  <div class="tc"><div class="th"><div class="tt">Payment Queue</div><span id="pc-label" style="font-size:11px;color:var(--muted)">8 payments</span></div>
+  <table class="dt"><thead><tr><th>ID</th><th>Client</th><th>Amount</th><th>Currency</th><th>Platform</th><th>Status</th><th>Reason</th><th>Age</th><th>Agent</th><th>Action</th></tr></thead><tbody id="pb"></tbody></table></div>
+</div>
+
+<!-- KYC -->
+<div class="panel" id="panel-kyc">
+  <div class="kpi-grid">
+    <div class="kpi b"><div class="kl">Submissions Today</div><div class="kv">63</div><div class="ks ku">▲ +14 vs yesterday</div></div>
+    <div class="kpi g"><div class="kl">Auto-Approved</div><div class="kv">16</div><div class="ks ku">25% auto-approval rate</div></div>
+    <div class="kpi a"><div class="kl">Manual Review Queue</div><div class="kv">47</div><div class="ks kd">11 breaching SLA</div></div>
+    <div class="kpi r"><div class="kl">Rejection Rate</div><div class="kv">18%</div><div class="ks kd">▲ +3% vs last week</div></div>
+    <div class="kpi b"><div class="kl">Avg Decision Time</div><div class="kv">2.8h</div><div class="ks ku">▼ target was 4h</div></div>
+    <div class="kpi p"><div class="kl">High Risk Cases</div><div class="kv">9</div><div class="ks kd">Requires senior review</div></div>
+  </div>
+  <div class="filter-bar">
+    <span class="fl">Filter:</span>
+    <select><option value="all">All Statuses</option><option>Pending</option><option>In Review</option><option>Approved</option><option>Rejected</option><option>Flagged</option></select>
+    <select><option value="all">All Risk Tiers</option><option>Low</option><option>Medium</option><option>High</option><option>Very High</option></select>
+    <select><option value="all">All Doc Types</option><option>Passport</option><option>National ID</option><option>Utility Bill</option><option>Company Docs</option></select>
+    <select><option value="all">All Countries</option><option>UAE</option><option>Saudi Arabia</option><option>UK</option><option>Germany</option><option>Singapore</option></select>
+    <input type="text" placeholder="Search client or case ID...">
+    <button class="btn btn-p btn-sm" onclick="alert('Exporting KYC data...')">Export CSV</button>
+  </div>
+  <div class="cg cg2">
+    <div class="cc"><div class="ct">KYC Rejection Reasons</div><canvas id="c-krej" height="140"></canvas></div>
+    <div class="cc"><div class="ct">Cases by Risk Tier &amp; Country</div><canvas id="c-kcountry" height="140"></canvas></div>
+  </div>
+  <div class="cg cg2">
+    <div class="cc"><div class="ct">Document Type Distribution</div><canvas id="c-kdoc" height="120"></canvas></div>
+    <div class="cc"><div class="ct">Avg Decision Time — 7 Days</div><canvas id="c-ktrend" height="120"></canvas></div>
+  </div>
+  <div class="tc"><div class="th"><div class="tt">KYC Review Queue</div></div>
+  <table class="dt"><thead><tr><th>Case ID</th><th>Client</th><th>Country</th><th>Doc Type</th><th>Risk Tier</th><th>Submitted</th><th>SLA</th><th>Status</th><th>Assigned</th><th>Action</th></tr></thead><tbody id="kb"></tbody></table></div>
+</div>
+
+<!-- TRADING & RISK -->
+<div class="panel" id="panel-trading">
+  <div class="kpi-grid">
+    <div class="kpi b"><div class="kl">Active Traders Now</div><div class="kv">1,847</div><div class="ks kn">Across all platforms</div></div>
+    <div class="kpi r"><div class="kl">Margin Calls Today</div><div class="kv">14</div><div class="ks kd">▲ 4 vs yesterday</div></div>
+    <div class="kpi a"><div class="kl">Position Limit Breaches</div><div class="kv">3</div><div class="ks kd">Intervention needed</div></div>
+    <div class="kpi r"><div class="kl">Suspicious Flags</div><div class="kv">7</div><div class="ks kd">2 critical severity</div></div>
+    <div class="kpi g"><div class="kl">Trade Volume Today</div><div class="kv">$2.1B</div><div class="ks ku">▲ +4% vs avg</div></div>
+    <div class="kpi t"><div class="kl">Alert Resolution Rate</div><div class="kv">91%</div><div class="ks ku">▲ +6% this month</div></div>
+  </div>
+  <div class="filter-bar">
+    <span class="fl">Filter:</span>
+    <select><option value="all">All Severities</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select>
+    <select><option value="all">All Platforms</option><option>MT4</option><option>MT5</option><option>MultiBank-Plus</option><option>Crypto</option></select>
+    <select id="af"><option value="open">Open Only</option><option value="all">All Alerts</option></select>
+    <button class="btn btn-p btn-sm" onclick="alert('Exporting risk alerts...')">Export Alerts</button>
+  </div>
+  <div class="cg cg2">
+    <div class="cc"><div class="ct">Trade Volume by Platform — Today</div><canvas id="c-tplat" height="140"></canvas></div>
+    <div class="cc"><div class="ct">Alert Type Distribution</div><canvas id="c-atype" height="140"></canvas></div>
+  </div>
+  <div class="cg cg2">
+    <div class="cc"><div class="ct">Margin Call Trend — 10 Days</div><canvas id="c-margin" height="120"></canvas></div>
+    <div class="cc"><div class="ct">Alert Resolution Time by Severity</div><canvas id="c-ares" height="120"></canvas></div>
+  </div>
+  <div class="tc"><div class="th"><div class="tt">Active Risk Alerts</div></div>
+  <table class="dt"><thead><tr><th>Alert ID</th><th>Severity</th><th>Client</th><th>Type</th><th>Platform</th><th>Triggered</th><th>Value at Risk</th><th>Status</th><th>Action</th></tr></thead><tbody id="ab2"></tbody></table></div>
+</div>
+
+<!-- CRM -->
+<div class="panel" id="panel-crm">
+  <div class="kpi-grid">
+    <div class="kpi a"><div class="kl">Open Support Tickets</div><div class="kv">31</div><div class="ks kd">▲ 7 since yesterday</div></div>
+    <div class="kpi r"><div class="kl">Repeat Contacts Today</div><div class="kv">8</div><div class="ks kd">Same client, multi-issue</div></div>
+    <div class="kpi p"><div class="kl">VIP Open Cases</div><div class="kv">4</div><div class="ks kd">Immediate priority</div></div>
+    <div class="kpi b"><div class="kl">Avg Complaint Resolution</div><div class="kv">4.1h</div><div class="ks ku">▼ -0.9h vs last week</div></div>
+    <div class="kpi g"><div class="kl">CSAT Score</div><div class="kv">4.2/5</div><div class="ks ku">▲ +0.3 this month</div></div>
+    <div class="kpi t"><div class="kl">First Contact Resolution</div><div class="kv">67%</div><div class="ks ku">▲ +9% vs last quarter</div></div>
+  </div>
+  <div class="cg cg2">
+    <div class="cc"><div class="ct">Complaint Categories</div><canvas id="c-comp" height="140"></canvas></div>
+    <div class="cc"><div class="ct">VIP vs Standard Cases — 4 Weeks</div><canvas id="c-vip" height="140"></canvas></div>
+  </div>
+  <div class="cg cg2">
+    <div class="cc"><div class="ct">Repeat Contact Rate Trend</div><canvas id="c-repeat" height="120"></canvas></div>
+    <div class="cc"><div class="ct">Complaints by Business Line</div><canvas id="c-biz" height="120"></canvas></div>
+  </div>
+  <div class="tc"><div class="th"><div class="tt">Client Case Queue</div></div>
+  <table class="dt"><thead><tr><th>Client ID</th><th>Tier</th><th>Open Cases</th><th>Last Contact</th><th>Category</th><th>Priority</th><th>Agent</th><th>Action</th></tr></thead><tbody id="crb"></tbody></table></div>
+</div>
+
+<!-- WORKFLOW BUILDER -->
+<div class="panel" id="panel-workflow">
+  <div class="kpi-grid">
+    <div class="kpi g"><div class="kl">Active Workflows</div><div class="kv" id="wac">5</div><div class="ks kn">Across all categories</div></div>
+    <div class="kpi b"><div class="kl">Total Runs Today</div><div class="kv">361</div><div class="ks ku">▲ +43 vs yesterday</div></div>
+    <div class="kpi g"><div class="kl">Success Rate</div><div class="kv">98.3%</div><div class="ks ku">▲ +0.4%</div></div>
+    <div class="kpi a"><div class="kl">Avg Time Saved / Run</div><div class="kv">22 min</div><div class="ks ku">133h saved this week</div></div>
+  </div>
+  <div class="st">Active Workflows</div>
+  <div id="wfs"></div>
+  <div class="st" style="margin-top:16px">Build New Workflow — No Code Required</div>
+  <div class="builder">
+    <div class="br"><span class="bl">Category</span><select class="bs" id="wcat"><option>KYC</option><option>Payments</option><option>Risk</option><option>Compliance</option><option>CRM</option></select></div>
+    <div class="br"><span class="bl">Trigger</span><span class="ba">⚡</span><select class="bs" id="wtrg"><option>KYC document uploaded</option><option>Payment initiated</option><option>Withdrawal requested</option><option>Fraud signal detected</option><option>New account created</option><option>Margin call triggered</option><option>SLA timer breached</option></select></div>
+    <div class="br"><span class="bl">Condition</span><span class="ba">⚙️</span><select class="bs" id="wfld"><option>Risk score</option><option>Amount (USD)</option><option>Account age (days)</option><option>Country</option><option>Client tier</option></select><select class="bs" id="wop"><option>is greater than</option><option>is less than</option><option>equals</option><option>is not</option></select><input class="bs" id="wval" type="text" value="70" style="width:65px"></div>
+    <div class="br"><span class="bl">Action</span><span class="ba">▶️</span><select class="bs" id="wact"><option>Escalate to senior reviewer</option><option>Send client notification</option><option>Place 24hr hold</option><option>Auto-approve</option><option>Create compliance ticket</option><option>Suspend trading</option><option>Flag for VARA review</option><option>Notify ops lead</option></select></div>
+    <div class="br"><span class="bl">SLA Timer</span><span class="ba">⏱️</span><select class="bs" id="wsla"><option>1 hour</option><option>4 hours</option><option>24 hours</option><option>None</option></select></div>
+    <div class="br"><span class="bl">Notify</span><span class="ba">🔔</span><select class="bs" id="wnot"><option>Assigned agent</option><option>Ops lead</option><option>Compliance team</option><option>All teams</option><option>None</option></select></div>
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <button class="btn btn-p" onclick="saveWF()">Save &amp; Activate Workflow</button>
+      <button class="btn" onclick="testWF()">Test Run (Last 100 Events)</button>
+    </div>
+    <div class="wfr" id="wfr"></div>
+  </div>
+</div>
+
+<!-- AUDIT TRAIL -->
+<div class="panel" id="panel-audit">
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kl">Total Actions Today</div><div class="kv">847</div><div class="ks kn">All systems logged</div></div>
+    <div class="kpi a"><div class="kl">Manual Overrides</div><div class="kv">12</div><div class="ks kd">Each requires reason</div></div>
+    <div class="kpi b"><div class="kl">Config Changes</div><div class="kv">5</div><div class="ks kn">Workflow + threshold edits</div></div>
+    <div class="kpi g"><div class="kl">Regulator Exports</div><div class="kv">3</div><div class="ks kn">VARA, ASIC, MAS</div></div>
+  </div>
+  <div class="filter-bar">
+    <span class="fl">Filter:</span>
+    <select id="asyf" onchange="renderAudit()"><option value="all">All Systems</option><option value="Payments">Payments</option><option value="KYC">KYC</option><option value="Risk">Risk/Trading</option><option value="CRM">CRM</option><option value="Workflow">Workflow</option><option value="Compliance">Compliance</option></select>
+    <select id="atyf" onchange="renderAudit()"><option value="all">All Actions</option><option value="Approved">Approvals</option><option value="Override">Overrides</option><option value="Config">Config Changes</option><option value="Escalated">Escalations</option><option value="Export">Regulator Exports</option></select>
+    <select id="auf" onchange="renderAudit()"><option value="all">All Users</option><option value="Priya S.">Priya S.</option><option value="James K.">James K.</option><option value="Amir R.">Amir R.</option><option value="System">System (Auto)</option></select>
+    <input type="text" id="asrch" placeholder="Search audit log..." oninput="renderAudit()">
+    <button class="btn btn-p btn-sm" onclick="exportAudit('VARA')">Export for VARA</button>
+    <button class="btn btn-sm" onclick="exportAudit('ASIC')">Export for ASIC</button>
+    <button class="btn btn-sm" onclick="exportAudit('MAS')">Export for MAS</button>
+  </div>
+  <div class="tc">
+    <div class="th"><div class="tt">Immutable Audit Log — Tamper-Proof, Cryptographically Signed</div><span style="font-size:11px;color:var(--green);font-weight:600">✓ Verified Integrity</span></div>
+    <div style="padding:4px 14px 14px" id="alog"></div>
+  </div>
+</div>
+
+<!-- COMPLIANCE -->
+<div class="panel" id="panel-compliance">
+  <div class="kpi-grid">
+    <div class="kpi r"><div class="kl">Overdue Reports</div><div class="kv">2</div><div class="ks kd">Immediate action needed</div></div>
+    <div class="kpi a"><div class="kl">Due This Week</div><div class="kv">5</div><div class="ks kd">VARA, MAS, BaFin</div></div>
+    <div class="kpi g"><div class="kl">Submitted This Month</div><div class="kv">18</div><div class="ks ku">of 20 required</div></div>
+    <div class="kpi b"><div class="kl">Outstanding Data Requests</div><div class="kv">3</div><div class="ks kn">From 3 regulators</div></div>
+    <div class="kpi g"><div class="kl">Audit Readiness Score</div><div class="kv">87%</div><div class="ks ku">▲ +12% this quarter</div></div>
+    <div class="kpi t"><div class="kl">Active Jurisdictions</div><div class="kv">18+</div><div class="ks kn">ASIC, VARA, MAS, BaFin...</div></div>
+  </div>
+  <div class="cg cg2">
+    <div class="cc"><div class="ct">Report Status by Regulator</div><canvas id="c-reg" height="150"></canvas></div>
+    <div class="cc"><div class="ct">Audit Readiness Score — 6 Months</div><canvas id="c-ctrend" height="150"></canvas></div>
+  </div>
+  <div class="st">Urgent Regulatory Deadlines</div>
+  <div id="comp-cards"></div>
+  <div class="tc" style="margin-top:14px"><div class="th"><div class="tt">Regulatory Obligations Tracker</div></div>
+  <table class="dt"><thead><tr><th>Regulator</th><th>Jurisdiction</th><th>Report Type</th><th>Frequency</th><th>Due Date</th><th>Status</th><th>Last Submitted</th><th>Action</th></tr></thead><tbody id="compb"></tbody></table></div>
+</div>
+
+</div>
+
+<script>
+const N='#1E2761',M='#2E3F8F',G='#F5C518',GR='#16A34A',RD='#DC2626',AM='#F59E0B',BL='#2563EB',PU='#7C3AED',TE='#0D9488',LT='#CADCFC';
+
+const payD=[
+  {id:'PAY-8821',cl:'Ahmed Al-Rashid',amt:'$48,200',cur:'USD',plat:'MT5',st:'Pending',reason:'Compliance hold',age:'2h 14m',ag:'Priya S.'},
+  {id:'PAY-8820',cl:'Sofia Chen',amt:'$12,500',cur:'USD',plat:'MultiBank-Plus',st:'Failed',reason:'Insufficient funds',age:'0h 45m',ag:'James K.'},
+  {id:'PAY-8819',cl:'Marco Rossi',amt:'€8,300',cur:'EUR',plat:'MT4',st:'Pending',reason:'AML review',age:'SLA BREACH',ag:'Amir R.'},
+  {id:'PAY-8818',cl:'Yuki Tanaka',amt:'$3,200',cur:'USD',plat:'Crypto',st:'Completed',reason:'—',age:'Done',ag:'System'},
+  {id:'PAY-8817',cl:'Elena Popescu',amt:'$89,000',cur:'USD',plat:'MT5',st:'Pending',reason:'Large amount review',age:'1h 10m',ag:'James K.'},
+  {id:'PAY-8816',cl:'Carlos Mendez',amt:'£5,800',cur:'GBP',plat:'MultiBank-Plus',st:'Reversed',reason:'Client request',age:'Done',ag:'System'},
+  {id:'PAY-8815',cl:'Fatima Al-Zahra',amt:'AED 22,000',cur:'AED',plat:'MT4',st:'Failed',reason:'Technical error',age:'3h 02m',ag:'Priya S.'},
+  {id:'PAY-8814',cl:'David Park',amt:'$1,400',cur:'USD',plat:'Crypto',st:'Completed',reason:'—',age:'Done',ag:'System'},
+];
+const kycD=[
+  {id:'KYC-4821',cl:'Ahmed Al-Rashid',co:'UAE',doc:'Passport',risk:'High',sub:'2h ago',sla:'1h 46m',st:'In Review',ag:'Priya S.'},
+  {id:'KYC-4820',cl:'Sofia Chen',co:'Singapore',doc:'National ID',risk:'Low',sub:'3h ago',sla:'Done',st:'Approved',ag:'System'},
+  {id:'KYC-4819',cl:'Marco Rossi',co:'Italy',doc:'Passport',risk:'Medium',sub:'5h ago',sla:'SLA BREACH',st:'Pending',ag:'Unassigned'},
+  {id:'KYC-4818',cl:'Yuki Tanaka',co:'Japan',doc:'Passport',risk:'Low',sub:'1h ago',sla:'3h 00m',st:'In Review',ag:'James K.'},
+  {id:'KYC-4817',cl:'Elena Popescu',co:'Romania',doc:'National ID',risk:'Very High',sub:'4h ago',sla:'0h 30m',st:'Flagged',ag:'Amir R.'},
+  {id:'KYC-4816',cl:'Carlos Mendez',co:'Mexico',doc:'Company Docs',risk:'High',sub:'6h ago',sla:'SLA BREACH',st:'Pending',ag:'Unassigned'},
+  {id:'KYC-4815',cl:'Fatima Al-Zahra',co:'Saudi Arabia',doc:'Passport',risk:'Medium',sub:'2h ago',sla:'2h 10m',st:'In Review',ag:'Priya S.'},
+  {id:'KYC-4814',cl:'David Park',co:'South Korea',doc:'National ID',risk:'Low',sub:'30m ago',sla:'3h 30m',st:'Pending',ag:'Unassigned'},
+];
+const altD=[
+  {id:'ALT-091',sev:'Critical',cl:'Fatima Al-Zahra',type:'Unusual withdrawal pattern',plat:'MT5',trig:'14:28',var:'$89,000',st:'Open'},
+  {id:'ALT-090',sev:'High',cl:'Elena Popescu',type:'Position limit breach',plat:'MT4',trig:'13:55',var:'$145,000',st:'Open'},
+  {id:'ALT-089',sev:'High',cl:'Unknown — Bot pattern',type:'Automated trading detected',plat:'Crypto',trig:'13:10',var:'$23,400',st:'Open'},
+  {id:'ALT-088',sev:'Medium',cl:'Marco Rossi',type:'Multiple failed logins',plat:'MultiBank-Plus',trig:'12:44',var:'N/A',st:'Investigating'},
+  {id:'ALT-087',sev:'Medium',cl:'Carlos Mendez',type:'Rapid successive payments',plat:'MT4',trig:'11:30',var:'$12,200',st:'Investigating'},
+  {id:'ALT-086',sev:'Low',cl:'David Park',type:'New device login',plat:'Crypto',trig:'10:15',var:'N/A',st:'Resolved'},
+];
+const crmD=[
+  {id:'C-7721',tier:'VIP',cases:3,last:'10 mins ago',cat:'Withdrawal issue',pri:'Critical',ag:'James K.'},
+  {id:'C-7720',tier:'VIP',cases:2,last:'25 mins ago',cat:'KYC query',pri:'High',ag:'Priya S.'},
+  {id:'C-7719',tier:'Standard',cases:1,last:'1h ago',cat:'Trading error',pri:'Medium',ag:'Amir R.'},
+  {id:'C-7718',tier:'Standard',cases:4,last:'2h ago',cat:'Card issue',pri:'High',ag:'James K.'},
+  {id:'C-7717',tier:'Premium',cases:1,last:'3h ago',cat:'Account access',pri:'Medium',ag:'Unassigned'},
+  {id:'C-7716',tier:'Standard',cases:2,last:'4h ago',cat:'FX rate query',pri:'Low',ag:'System'},
+];
+let auditD=[
+  {time:'14:32',user:'System',action:'Auto-approved payment PAY-8814 — risk score 18, within threshold',type:'Approved',sys:'Payments',bg:'#DCFCE7',tc:'#065F46'},
+  {time:'14:28',user:'James K.',action:'Flagged withdrawal PAY-8817 — $89K new device, AML hold applied',type:'Override',sys:'Payments',bg:'#FEF3C7',tc:'#92400E'},
+  {time:'14:15',user:'Priya S.',action:'KYC approved for KYC-4818 (Yuki Tanaka) — documents verified, risk score 22',type:'Approved',sys:'KYC',bg:'#DCFCE7',tc:'#065F46'},
+  {time:'13:58',user:'Amir R.',action:'Risk alert ALT-090 escalated — position limit breach $145K',type:'Escalated',sys:'Risk',bg:'#FEE2E2',tc:'#991B1B'},
+  {time:'13:44',user:'System',action:'Workflow "KYC High Risk Auto-Escalate" triggered for KYC-4817 — risk score 91',type:'Config',sys:'Workflow',bg:'#EDE9FE',tc:'#5B21B6'},
+  {time:'13:31',user:'Priya S.',action:'Updated KYC escalation threshold 65 → 70 in Workflow Builder',type:'Config',sys:'Workflow',bg:'#EDE9FE',tc:'#5B21B6'},
+  {time:'13:10',user:'System',action:'SLA breach triggered PAY-8819 — 4hr window exceeded, ops lead notified',type:'Escalated',sys:'Payments',bg:'#FEE2E2',tc:'#991B1B'},
+  {time:'12:55',user:'James K.',action:'Exported VARA compliance report Q1 2026 — 847 records, signed & encrypted',type:'Export',sys:'Compliance',bg:'#DBEAFE',tc:'#1E40AF'},
+  {time:'12:30',user:'Amir R.',action:'CRM ticket C-7718 priority escalated — repeat contact (4th time this week)',type:'Escalated',sys:'CRM',bg:'#FEE2E2',tc:'#991B1B'},
+  {time:'11:45',user:'System',action:'Auto-closed 7 inactive cases — 7-day timer triggered post-resolution',type:'Config',sys:'Workflow',bg:'#EDE9FE',tc:'#5B21B6'},
+  {time:'11:20',user:'James K.',action:'ASIC quarterly report submitted — 01 Jan – 31 Mar 2026',type:'Export',sys:'Compliance',bg:'#DBEAFE',tc:'#1E40AF'},
+  {time:'10:55',user:'Priya S.',action:'Manual override ALT-089 — flagged bot pattern, account suspended pending review',type:'Override',sys:'Risk',bg:'#FEF3C7',tc:'#92400E'},
+];
+const regD=[
+  {reg:'VARA',jur:'UAE',type:'Quarterly Transaction Report',freq:'Quarterly',due:'2026-03-31',st:'Overdue',last:'2025-12-31'},
+  {reg:'ASIC',jur:'Australia',type:'AML/CTF Report',freq:'Quarterly',due:'2026-04-02',st:'Due Soon',last:'2025-12-31'},
+  {reg:'MAS',jur:'Singapore',type:'Market Conduct Report',freq:'Monthly',due:'2026-04-05',st:'Due Soon',last:'2026-02-28'},
+  {reg:'BaFin',jur:'Germany',type:'Risk Assessment Report',freq:'Quarterly',due:'2026-04-15',st:'In Progress',last:'2025-12-31'},
+  {reg:'CySEC',jur:'Cyprus',type:'Financial Statements',freq:'Annual',due:'2026-06-30',st:'On Track',last:'2025-06-30'},
+  {reg:'FMA',jur:'Austria',type:'Compliance Declaration',freq:'Annual',due:'2026-05-01',st:'On Track',last:'2025-05-01'},
+  {reg:'CIMA',jur:'Cayman Islands',type:'Annual Return',freq:'Annual',due:'2026-07-31',st:'On Track',last:'2025-07-31'},
+];
+let wfsD=[
+  {name:'KYC High Risk Auto-Escalate',cat:'KYC',trg:'KYC document uploaded',cond:'Risk score > 70',act:'Escalate to senior reviewer',sla:'4 hours',not:'Ops lead',runs:247,succ:99.2,on:true},
+  {name:'Large Withdrawal Hold',cat:'Payments',trg:'Withdrawal requested',cond:'Amount (USD) > 50,000',act:'Place 24hr hold',sla:'24 hours',not:'Compliance team',runs:83,succ:100,on:true},
+  {name:'Fraud Signal — Suspend',cat:'Risk',trg:'Fraud signal detected',cond:'Risk score > 85',act:'Suspend trading',sla:'1 hour',not:'All teams',runs:31,succ:97.8,on:true},
+  {name:'Margin Call Auto-Notify',cat:'Risk',trg:'Margin call triggered',cond:'Account age (days) > 30',act:'Send client notification',sla:'1 hour',not:'Assigned agent',runs:14,succ:100,on:true},
+  {name:'New Account VIP Flow',cat:'CRM',trg:'New account created',cond:'Client tier equals VIP',act:'Notify ops lead',sla:'None',not:'Assigned agent',runs:56,succ:100,on:false},
+];
+
+function pc(s){const m={Pending:'pa','In Review':'pb',Approved:'pg',Completed:'pg',Failed:'pr',Flagged:'pr',Reversed:'pn',Investigating:'pp',Open:'pr',Resolved:'pg','Due Soon':'pa',Overdue:'pr','In Progress':'pb','On Track':'pg',Critical:'pr',High:'pa',Medium:'pb',Low:'pg',VIP:'pp',Premium:'pb',Standard:'pn','Very High':'pr'};return m[s]||'pn'}
+
+function renderPay(){
+  document.getElementById('pb').innerHTML=payD.map(r=>`<tr>
+    <td style="font-size:11px;color:var(--muted);font-weight:600">${r.id}</td><td style="font-weight:600">${r.cl}</td><td style="font-weight:600">${r.amt}</td><td>${r.cur}</td>
+    <td><span class="pill pn">${r.plat}</span></td><td><span class="pill ${pc(r.st)}">${r.st}</span></td>
+    <td style="color:var(--muted);font-size:11px">${r.reason}</td>
+    <td style="font-size:11px;font-weight:${r.age.includes('BREACH')?700:400};color:${r.age.includes('BREACH')?'var(--red)':r.age==='Done'?'var(--green)':'var(--dark)'}">${r.age}</td>
+    <td style="font-size:11px;color:var(--muted)">${r.ag}</td>
+    <td><button class="btn btn-sm">Review</button></td></tr>`).join('');
+}
+function renderKYC(){
+  document.getElementById('kb').innerHTML=kycD.map(r=>`<tr>
+    <td style="font-size:11px;color:var(--muted);font-weight:600">${r.id}</td><td style="font-weight:600">${r.cl}</td><td>${r.co}</td><td style="font-size:11px">${r.doc}</td>
+    <td><span class="pill ${pc(r.risk)}">${r.risk}</span></td><td style="color:var(--muted);font-size:11px">${r.sub}</td>
+    <td style="font-size:11px;font-weight:${r.sla.includes('BREACH')?700:400};color:${r.sla.includes('BREACH')?'var(--red)':r.sla==='Done'?'var(--green)':'var(--dark)'}">${r.sla}</td>
+    <td><span class="pill ${pc(r.st)}">${r.st}</span></td><td style="font-size:11px;color:var(--muted)">${r.ag}</td>
+    <td><button class="btn btn-sm" onclick="reviewKYC('${r.id}')">Review</button></td></tr>`).join('');
+}
+function reviewKYC(id){const r=kycD.find(x=>x.id===id);if(r&&r.st==='Pending'){r.st='In Review';renderKYC();addAudit('System',`KYC case ${id} assigned for manual review — SLA timer started`,'Config','KYC','#EDE9FE','#5B21B6');}}
+function renderAlerts(){
+  document.getElementById('ab2').innerHTML=altD.map(a=>`<tr>
+    <td style="font-size:11px;color:var(--muted);font-weight:600">${a.id}</td><td><span class="pill ${pc(a.sev)}">${a.sev}</span></td>
+    <td style="font-weight:600">${a.cl}</td><td style="font-size:11px">${a.type}</td><td><span class="pill pn">${a.plat}</span></td>
+    <td style="color:var(--muted);font-size:11px">${a.trig}</td><td style="font-weight:600;color:var(--navy)">${a.var}</td>
+    <td><span class="pill ${pc(a.st)}">${a.st}</span></td>
+    <td style="display:flex;gap:4px;padding-top:7px">
+      <button class="btn btn-p btn-sm" onclick="resolveAlt('${a.id}')">Resolve</button>
+      <button class="btn btn-sm" onclick="escalateAlt('${a.id}')">Escalate</button>
+    </td></tr>`).join('');
+}
+function resolveAlt(id){const a=altD.find(x=>x.id===id);if(a){a.st='Resolved';renderAlerts();addAudit('Priya S.',`Alert ${id} resolved — investigation complete`,'Approved','Risk','#DCFCE7','#065F46');}}
+function escalateAlt(id){addAudit('James K.',`Alert ${id} escalated to compliance — flagged critical`,'Escalated','Risk','#FEE2E2','#991B1B');alert(`${id} escalated. Compliance team notified. SLA reset to 1 hour.`);}
+function renderCRM(){
+  document.getElementById('crb').innerHTML=crmD.map(r=>`<tr>
+    <td style="font-size:11px;color:var(--muted);font-weight:600">${r.id}</td><td><span class="pill ${pc(r.tier)}">${r.tier}</span></td>
+    <td style="font-weight:700;color:var(--navy)">${r.cases}</td><td style="font-size:11px;color:var(--muted)">${r.last}</td>
+    <td style="font-size:11px">${r.cat}</td><td><span class="pill ${pc(r.pri)}">${r.pri}</span></td>
+    <td style="font-size:11px;color:var(--muted)">${r.ag}</td>
+    <td><button class="btn btn-sm">View</button></td></tr>`).join('');
+}
+function renderAudit(){
+  const sys=document.getElementById('asyf').value,typ=document.getElementById('atyf').value,usr=document.getElementById('auf').value,srch=document.getElementById('asrch').value.toLowerCase();
+  const f=auditD.filter(a=>(sys==='all'||a.sys===sys)&&(typ==='all'||a.type===typ)&&(usr==='all'||a.user===usr)&&(!srch||a.action.toLowerCase().includes(srch)||a.user.toLowerCase().includes(srch)));
+  document.getElementById('alog').innerHTML=f.map(a=>`<div class="ae">
+    <div class="at">${a.time}</div>
+    <div class="ai" style="background:${a.bg};color:${a.tc}">${a.type.slice(0,3).toUpperCase()}</div>
+    <div class="ab"><span class="au">${a.user}</span><span class="aa"> — ${a.action}</span><div class="as2">System: ${a.sys} &nbsp;|&nbsp; <span style="color:var(--green);font-weight:600">✓ Tamper-proof</span></div></div>
+  </div>`).join('');
+}
+function addAudit(user,action,type,sys,bg,tc){
+  const now=new Date();
+  const t=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+  auditD.unshift({time:t,user,action,type,sys,bg,tc});
+  renderAudit();
+}
+function exportAudit(reg){
+  addAudit('System',`${reg} compliance export initiated — ${auditD.length} records, cryptographically signed`,'Export','Compliance','#DBEAFE','#1E40AF');
+  alert(`${reg} export initiated.\n${auditD.length} records queued.\nFormat: Signed CSV + SHA-256 hash.\nDelivery: Secure regulator portal.`);
+}
+function renderComp(){
+  document.getElementById('comp-cards').innerHTML=regD.filter(r=>r.st==='Overdue'||r.st==='Due Soon').map(r=>`<div class="cc2">
+    <div class="cd ${r.st==='Overdue'?'co':'cu'}">${r.st==='Overdue'?'OVR':'<3d'}</div>
+    <div class="ci"><div class="cn">${r.reg} — ${r.type}</div><div class="cm">${r.jur} · ${r.freq} · Due: ${r.due} · Last submitted: ${r.last}</div></div>
+    <button class="btn btn-p btn-sm">Prepare Report</button></div>`).join('');
+  document.getElementById('compb').innerHTML=regD.map(r=>`<tr>
+    <td style="font-weight:700;color:var(--navy)">${r.reg}</td><td>${r.jur}</td><td style="font-size:11px">${r.type}</td>
+    <td><span class="pill pn">${r.freq}</span></td>
+    <td style="font-weight:600;color:${r.st==='Overdue'?'var(--red)':r.st==='Due Soon'?'var(--amber)':'var(--dark)'}">${r.due}</td>
+    <td><span class="pill ${pc(r.st)}">${r.st}</span></td>
+    <td style="color:var(--muted);font-size:11px">${r.last}</td>
+    <td><button class="btn btn-sm">Open</button></td></tr>`).join('');
+}
+function renderWFs(){
+  document.getElementById('wfs').innerHTML=wfsD.map((w,i)=>`<div class="wfc">
+    <div style="width:4px;border-radius:4px;background:${w.on?'var(--green)':'var(--muted)'};align-self:stretch;flex-shrink:0"></div>
+    <div class="wfi"><div class="wfn">${w.name} <span class="pill pn" style="font-size:9px;margin-left:4px">${w.cat}</span></div>
+    <div class="wfm">${w.trg} → if ${w.cond} → ${w.act} · SLA: ${w.sla} · Notify: ${w.not}</div></div>
+    <div class="wfs2" style="display:flex;gap:14px;text-align:center">
+      <div><div class="wsv">${w.runs}</div><div class="wsl">Runs</div></div>
+      <div><div class="wsv">${w.succ}%</div><div class="wsl">Success</div></div>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <span class="pill ${w.on?'pg':'pn'}">${w.on?'Active':'Paused'}</span>
+      <button class="btn btn-sm" onclick="toggleWF(${i})">${w.on?'Pause':'Activate'}</button>
+      <button class="btn btn-sm">Edit</button>
+    </div></div>`).join('');
+  document.getElementById('wac').textContent=wfsD.filter(w=>w.on).length;
+}
+function toggleWF(i){
+  wfsD[i].on=!wfsD[i].on;renderWFs();
+  addAudit('Priya S.',`Workflow "${wfsD[i].name}" ${wfsD[i].on?'activated':'paused'}`,'Config','Workflow','#EDE9FE','#5B21B6');
+}
+function saveWF(){
+  const t=document.getElementById('wtrg').value,f=document.getElementById('wfld').value,o=document.getElementById('wop').value,v=document.getElementById('wval').value,a=document.getElementById('wact').value,s=document.getElementById('wsla').value,n=document.getElementById('wnot').value,c=document.getElementById('wcat').value;
+  const name=t.split(' ').slice(0,3).join(' ')+' → '+a.split(' ').slice(0,2).join(' ');
+  wfsD.push({name,cat:c,trg:t,cond:`${f} ${o} ${v}`,act:a,sla:s,not:n,runs:0,succ:100,on:true});
+  renderWFs();
+  const r=document.getElementById('wfr');
+  r.style.cssText='display:block;background:#DCFCE7;color:#065F46;border:1px solid #A7F3D0;padding:10px 14px;border-radius:6px;font-size:12px;margin-top:10px';
+  r.textContent=`✓ Saved & activated: "${name}" — ${t} · if ${f} ${o} ${v} · then ${a} · SLA: ${s} · Notify: ${n}`;
+  addAudit('Priya S.',`New workflow created: "${name}" — Category: ${c}`,'Config','Workflow','#EDE9FE','#5B21B6');
+  setTimeout(()=>r.style.display='none',6000);
+}
+function testWF(){
+  const f=document.getElementById('wfld').value,o=document.getElementById('wop').value,v=document.getElementById('wval').value,a=document.getElementById('wact').value;
+  const r=document.getElementById('wfr');
+  r.style.cssText='display:block;background:#DBEAFE;color:#1E40AF;border:1px solid #BFDBFE;padding:10px 14px;border-radius:6px;font-size:12px;margin-top:10px';
+  r.textContent=`Test complete ✓ — "${f} ${o} ${v}" matched 14 of last 100 events. "${a}" would have triggered for: KYC-4817, ALT-091, PAY-8817... Est. 4.8 hrs/week saved.`;
+  setTimeout(()=>r.style.display='none',7000);
+}
+
+function switchTab(name,el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  el.classList.add('active');
+}
+function updateClock(){const now=new Date();document.getElementById('clock').textContent=now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' GST';}
+
+function mk(id,type,labels,datasets,opts={}){
+  const ctx=document.getElementById(id);if(!ctx)return;
+  new Chart(ctx,{type,data:{labels,datasets},options:{responsive:true,maintainAspectRatio:true,
+    plugins:{legend:{position:opts.lp||'bottom',labels:{font:{size:10},boxWidth:10,padding:8}},tooltip:{bodyFont:{size:11}}},
+    scales:type==='pie'||type==='doughnut'?{}:{y:{ticks:{font:{size:10},callback:opts.yc||undefined},grid:{color:'rgba(0,0,0,0.04)'},beginAtZero:opts.bz!==false},x:{ticks:{font:{size:10}},grid:{display:false}}},
+    ...(opts.ex||{})}});
+}
+
+function initCharts(){
+  mk('c-stp','line',['Mon','Tue','Wed','Thu','Fri','Sat','Today'],
+    [{label:'MT4',data:[68,71,73,72,76,78,81],borderColor:N,tension:.4,pointRadius:3,fill:false},
+     {label:'MT5',data:[72,74,77,75,79,82,84],borderColor:G,tension:.4,pointRadius:3,fill:false},
+     {label:'MB-Plus',data:[65,68,70,73,75,77,80],borderColor:TE,tension:.4,pointRadius:3,fill:false},
+     {label:'Crypto',data:[58,62,65,67,70,72,76],borderColor:PU,tension:.4,pointRadius:3,fill:false}],{yc:v=>v+'%'});
+  mk('c-type','doughnut',['KYC (47)','Payments (12)','Risk (7)','CRM (8)'],[{data:[47,12,7,8],backgroundColor:[N,G,RD,TE],borderWidth:0}]);
+  mk('c-hour','bar',['6am','7','8','9','10','11','12','1pm','2','3','4','5'],[{label:'Cases',data:[3,8,14,22,31,28,35,29,24,18,12,8],backgroundColor:M,borderRadius:4}],{ex:{plugins:{legend:{display:false}}}});
+  mk('c-country','bar',['UAE','Saudi Arabia','UK','Germany','Singapore'],[{data:[18,14,11,8,6],backgroundColor:[N,M,BL,TE,G],borderRadius:4}],{ex:{indexAxis:'y',plugins:{legend:{display:false}}}});
+  mk('c-res','bar',['<1h','1-2h','2-4h','4-8h','8-24h','>24h'],[{data:[28,42,31,18,9,4],backgroundColor:M,borderRadius:4}],{ex:{plugins:{legend:{display:false}}}});
+  mk('c-esc','line',['W1','W2','W3','W4','W5','W6','W7','W8','W9','W10'],[{label:'Escalation %',data:[12,10,11,9,8,7,8,6,5,5],borderColor:RD,tension:.4,pointRadius:3,fill:true,backgroundColor:'rgba(220,38,38,0.08)'}],{yc:v=>v+'%'});
+  mk('c-agent','bar',['Priya S.','James K.','Amir R.','Sara M.','Tom B.'],[{data:[18,21,14,12,9],backgroundColor:[N,M,BL,TE,G],borderRadius:4}],{ex:{plugins:{legend:{display:false}}}});
+  mk('c-pstatus','doughnut',['Completed','Pending','Failed','Reversed'],[{data:[142,12,8,5],backgroundColor:[GR,AM,RD,'#94A3B8'],borderWidth:0}]);
+  mk('c-pfail','bar',['Insufficient Funds','AML Hold','Technical Error','Compliance Hold','Client Request'],[{data:[3,2,2,1,1],backgroundColor:[RD,AM,BL,PU,TE],borderRadius:4}],{ex:{plugins:{legend:{display:false}}}});
+  mk('c-krej','bar',['Blurry Doc','Expired ID','Name Mismatch','Sanctions Hit','Missing Docs','Low Selfie'],[{data:[8,5,4,2,3,2],backgroundColor:RD,borderRadius:4}],{ex:{plugins:{legend:{display:false}}}});
+  mk('c-kcountry','bar',['UAE','Saudi Arabia','Russia','Iran','Nigeria'],
+    [{label:'High Risk',data:[4,3,4,2,1],backgroundColor:RD,borderRadius:4,stack:'a'},
+     {label:'Medium',data:[6,5,2,1,2],backgroundColor:AM,borderRadius:4,stack:'a'},
+     {label:'Low',data:[8,4,1,0,1],backgroundColor:GR,borderRadius:4,stack:'a'}]);
+  mk('c-kdoc','doughnut',['Passport (38)','National ID (14)','Company Docs (7)','Utility Bill (4)'],[{data:[38,14,7,4],backgroundColor:[N,BL,TE,G],borderWidth:0}]);
+  mk('c-ktrend','line',['Mon','Tue','Wed','Thu','Fri','Sat','Today'],[{label:'Avg Decision Time (hrs)',data:[4.2,3.8,3.5,3.2,3.0,2.9,2.8],borderColor:TE,tension:.4,pointRadius:3,fill:true,backgroundColor:'rgba(13,148,136,0.08)'}]);
+  mk('c-tplat','bar',['MT4','MT5','MultiBank-Plus','Crypto'],[{data:[0.8,0.7,0.4,0.2],backgroundColor:[N,M,BL,PU],borderRadius:4}],{ex:{plugins:{legend:{display:false}}}});
+  mk('c-atype','doughnut',['Unusual Withdrawal','Bot Pattern','Position Breach','Multi Logins','Rapid Payments'],[{data:[3,2,2,1,1],backgroundColor:[RD,PU,AM,BL,TE],borderWidth:0}]);
+  mk('c-margin','line',['D1','D2','D3','D4','D5','D6','D7','D8','D9','D10'],[{label:'Margin Calls',data:[8,11,9,14,10,12,13,11,13,14],borderColor:AM,tension:.4,pointRadius:3,fill:true,backgroundColor:'rgba(245,158,11,0.08)'}],{bz:true});
+  mk('c-ares','bar',['Critical','High','Medium','Low'],[{data:[1.2,3.4,8.1,24.0],backgroundColor:[RD,AM,BL,GR],borderRadius:4}],{ex:{plugins:{legend:{display:false}}}});
+  mk('c-comp','doughnut',['Withdrawal','KYC Query','Trading Error','Card Issue','Account Access','FX Rate'],[{data:[10,8,6,4,2,1],backgroundColor:[RD,AM,BL,PU,TE,N],borderWidth:0}]);
+  mk('c-vip','bar',['Week 1','Week 2','Week 3','Week 4'],
+    [{label:'VIP',data:[6,8,5,9],backgroundColor:G,borderRadius:4,stack:'a'},
+     {label:'Premium',data:[10,12,9,11],backgroundColor:M,borderRadius:4,stack:'a'},
+     {label:'Standard',data:[28,31,24,29],backgroundColor:LT,borderRadius:4,stack:'a'}]);
+  mk('c-repeat','line',['Mon','Tue','Wed','Thu','Fri','Sat','Today'],[{label:'Repeat Contact %',data:[12,10,14,11,9,8,11],borderColor:PU,tension:.4,pointRadius:3,fill:true,backgroundColor:'rgba(124,58,237,0.08)'}],{yc:v=>v+'%'});
+  mk('c-biz','bar',['Forex','CFD','Crypto','Metals','Indices'],[{data:[14,8,5,3,1],backgroundColor:[N,M,PU,AM,TE],borderRadius:4}],{ex:{plugins:{legend:{display:false}}}});
+  mk('c-reg','bar',['VARA','ASIC','MAS','BaFin','CySEC','FMA'],
+    [{label:'Submitted',data:[3,4,12,3,1,1],backgroundColor:GR,borderRadius:4,stack:'a'},
+     {label:'Pending',data:[1,1,0,1,0,0],backgroundColor:AM,borderRadius:4,stack:'a'},
+     {label:'Overdue',data:[1,0,0,0,0,0],backgroundColor:RD,borderRadius:4,stack:'a'}]);
+  mk('c-ctrend','line',['Oct','Nov','Dec','Jan','Feb','Mar'],[{label:'Audit Readiness %',data:[62,68,72,75,81,87],borderColor:GR,tension:.4,pointRadius:4,fill:true,backgroundColor:'rgba(22,163,74,0.08)'}],{yc:v=>v+'%'});
+}
+
+renderPay();renderKYC();renderAlerts();renderCRM();renderAudit();renderComp();renderWFs();
+setInterval(updateClock,1000);updateClock();
+window.addEventListener('load',initCharts);
+</script>
+</body>
+</html>
